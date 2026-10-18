@@ -18,7 +18,7 @@ const STORAGE_KEY = "ceki_score_tracker_state_v1";
 export default function CekiScoreTracker() {
   const [isGameStarted, setIsGameStarted] = useState<boolean>(false);
   const [players, setPlayers] = useState<string[]>(DEFAULT_PLAYERS);
-  const [nameInputs, setNameInputs] = useState<string[]>(DEFAULT_PLAYERS);
+  const [nameInputs, setNameInputs] = useState<string[]>(["", "", "", ""]);
   const [rounds, setRounds] = useState<RoundEntry[]>([]);
   const [currentInputs, setCurrentInputs] = useState<string[]>(["", "", "", ""]);
   const [editingNames, setEditingNames] = useState<boolean>(false);
@@ -37,7 +37,10 @@ export default function CekiScoreTracker() {
         const parsed = JSON.parse(saved);
         if (parsed.players && Array.isArray(parsed.players)) {
           setPlayers(parsed.players);
-          setNameInputs(parsed.players);
+          // Jika game sudah pernah dimulai, gunakan nama pemain yang ada; jika belum, biarkan kosong
+          if (parsed.isGameStarted) {
+            setNameInputs(parsed.players);
+          }
         }
         if (parsed.rounds && Array.isArray(parsed.rounds)) {
           setRounds(parsed.rounds);
@@ -176,6 +179,7 @@ export default function CekiScoreTracker() {
   const handleConfirmReset = () => {
     setRounds([]);
     setCurrentInputs(["", "", "", ""]);
+    setNameInputs(["", "", "", ""]);
     setIsGameStarted(false);
     setShowResetModal(false);
   };
