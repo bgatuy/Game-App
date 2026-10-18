@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f1f5f9"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <!-- Background Card (Ace of Spades) -->
+  <rect x="8" y="4" width="48" height="56" rx="6" fill="url(#cardGrad)" stroke="#cbd5e1" stroke-width="2" filter="url(#shadow)"/>
+  
+  <!-- 'A' Top-Left -->
+  <text x="14" y="16" font-family="Arial, sans-serif" font-weight="900" font-size="11" fill="#0f172a">A</text>
+  
+  <!-- Center Ace Spade Symbol -->
+  <!-- Classic Spade Path -->
+  <path d="M32 18 C30 24 22 27 22 34 C22 39 26 42 30 42 C31.2 42 32.2 41.7 33 41 C32.7 44 32 47 30 48 L34 48 C32 47 31.3 44 31 41 C31.8 41.7 32.8 42 34 42 C38 42 42 39 42 34 C42 27 34 24 32 18 Z" fill="#0f172a"/>
+  
+  <!-- Mini Spade Top-Left -->
+  <path d="M14 20 C13.5 21.5 11.5 22.2 11.5 24 C11.5 25.2 12.5 26 13.5 26 C13.8 26 14 25.9 14.2 25.7 C14.1 26.5 13.9 27.2 13.5 27.5 L14.5 27.5 C14.1 27.2 13.9 26.5 13.8 25.7 C14 25.9 14.2 26 14.5 26 C15.5 26 16.5 25.2 16.5 24 C16.5 22.2 14.5 21.5 14 20 Z" fill="#0f172a"/>
+</svg>
+
