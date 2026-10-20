@@ -27,6 +27,11 @@ export default function CekiScoreTracker() {
   const [activeTab, setActiveTab] = useState<"score" | "history">("score");
   const [showRulesModal, setShowRulesModal] = useState<boolean>(false);
   const [showResetModal, setShowResetModal] = useState<boolean>(false);
+  const [activeOvertakenPopup, setActiveOvertakenPopup] = useState<{
+    playerIndex: number;
+    oldScore: number;
+    passedBy: string;
+  } | null>(null);
   const [isClientLoaded, setIsClientLoaded] = useState<boolean>(false);
 
   // Load state dari localStorage saat pertama kali mount
@@ -167,6 +172,11 @@ export default function CekiScoreTracker() {
 
     setRounds([...rounds, newRoundEntry]);
     setCurrentInputs(["", "", "", ""]);
+
+    // Munculkan popup dramatis jika ada pemain yang tersalip
+    if (resetDetails.length > 0) {
+      setActiveOvertakenPopup(resetDetails[0]);
+    }
   };
 
   // Batalkan Ronde Terakhir (Undo)
@@ -462,32 +472,6 @@ export default function CekiScoreTracker() {
           </div>
         )}
 
-        {/* Banner Peringatan Aturan Reset Disalip (Jika ronde terakhir memicu reset) */}
-        {lastRound && lastRound.resetPlayerIndices.length > 0 && (
-          <div className="bg-gradient-to-r from-rose-900/90 to-red-950/90 border border-rose-600 rounded-2xl p-3.5 shadow-lg shadow-rose-950/50">
-            <div className="flex items-start gap-3">
-              <span className="text-2xl mt-0.5">⚠️</span>
-              <div className="flex-1">
-                <h4 className="text-sm font-black text-rose-200 uppercase tracking-wide">
-                  Aturan Disalip: Poin Direset ke 0!
-                </h4>
-                <div className="mt-1 text-xs text-rose-100/90 space-y-1">
-                  {lastRound.resetDetails?.map((detail, idx) => (
-                    <p key={idx}>
-                      <strong className="text-amber-300">
-                        {players[detail.playerIndex]}
-                      </strong>{" "}
-                      tersalip oleh <strong>{detail.passedBy}</strong> setelah
-                      mencapai {detail.oldScore} poin (≥ {RESET_THRESHOLD}),
-                      sehingga skornya otomatis <strong>direset ke 0</strong>!
-                    </p>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Tab Switcher (Papan Skor vs Riwayat Ronde) */}
         <div className="grid grid-cols-2 p-1 bg-slate-900 border border-slate-800 rounded-xl">
           <button
@@ -552,7 +536,7 @@ export default function CekiScoreTracker() {
                   return (
                     <div
                       key={idx}
-                      className={`relative overflow-hidden rounded-2xl p-3 border transition-all ${
+                      className={`relative overflow-hidden rounded-2xl p-2 md:p-3 border transition-all ${
                         isLeader
                           ? "bg-gradient-to-b from-amber-950/60 to-slate-900 border-amber-500/80 shadow-md shadow-amber-500/10 ring-1 ring-amber-500/40"
                           : "bg-slate-900 border-slate-800"
@@ -578,7 +562,7 @@ export default function CekiScoreTracker() {
                       {/* Nilai Skor Besar */}
                       <div className="mt-2 flex items-baseline justify-between">
                         <span
-                          className={`text-3xl font-black tracking-tight ${
+                          className={`text-2xl md:text-3xl font-black tracking-tight ${
                             score < 0
                               ? "text-rose-400"
                               : isAtRisk
@@ -608,7 +592,7 @@ export default function CekiScoreTracker() {
                       {/* Indikator Status Aturan Ceki */}
                       <div className="mt-2 flex items-center justify-between text-[10px]">
                         {isAtRisk ? (
-                          <span className="text-rose-300 bg-rose-950/60 border border-rose-800/70 px-1.5 py-0.5 rounded font-bold flex items-center gap-1">
+                          <span className="inline-flex text-rose-300 bg-rose-950/60 border border-rose-800/70 px-1.5 py-0.5 rounded font-bold items-center gap-1 text-[10px]">
                             <span className="h-1.5 w-1.5 rounded-full bg-rose-400 animate-ping" />
                             🚨 Rawan Tersalip!
                           </span>
@@ -623,7 +607,7 @@ export default function CekiScoreTracker() {
                         )}
                         {lastRound && (
                           <span
-                            className={`font-semibold ${
+                            className={`inline font-semibold text-[10px] ${
                               lastRound.scores[idx] > 0
                                 ? "text-emerald-400"
                                 : lastRound.scores[idx] < 0
@@ -921,6 +905,47 @@ export default function CekiScoreTracker() {
                 Ya, Reset Game
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* POPUP DRAMATIS: ATURAN DISALIP DENGAN EMOTICON SEDIH */}
+      {activeOvertakenPopup && (
+        <div
+          onClick={() => setActiveOvertakenPopup(null)}
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in cursor-pointer select-none"
+        >
+          {/* Card Utama Popup */}
+          <div
+            onClick={(e) => {
+              // Jika card ditekan juga tetap bisa close
+              setActiveOvertakenPopup(null);
+            }}
+            className="bg-gradient-to-b from-[#18080f] via-[#0d1424] to-[#070c18] border-2 border-rose-600/90 rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl shadow-rose-950/70 text-center space-y-4 relative overflow-hidden animate-scale-up"
+          >
+            {/* Hiasan latar belakang */}
+            <div className="absolute -top-12 -right-12 w-32 h-32 bg-rose-600/10 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+
+            {/* Emoticon Sedih Bergerak */}
+            <div className="relative mx-auto w-24 h-24 rounded-full bg-rose-950/80 border-2 border-rose-500/60 flex items-center justify-center shadow-lg shadow-rose-900/50">
+              <span className="text-5xl animate-bounce select-none">😭</span>
+              <span className="absolute -bottom-1 -right-1 text-2xl select-none">💔</span>
+            </div>
+
+            <div className="space-y-1 pt-1">
+              <h3 className="text-xl font-black text-rose-200 tracking-wide uppercase">
+                Yaaahh Kamu Disalip! 🥺
+              </h3>
+              <p className="text-sm font-black text-amber-300">
+                Poin Otomatis Jadi 0 Lagi Deeehhh...
+              </p>
+            </div>
+          </div>
+
+          {/* Teks Petunjuk Close di LUAR CARD BANNER */}
+          <div className="mt-4 flex items-center gap-1.5 text-xs text-slate-400 font-medium animate-pulse">
+            <span>Ketuk / tap di mana saja untuk menutup</span>
           </div>
         </div>
       )}
