@@ -216,9 +216,14 @@ export default function CekiScoreTracker() {
 
   const lastRound = rounds.length > 0 ? rounds[rounds.length - 1] : null;
 
-  // Jika client belum siap (SSR hydration), render background gelap
+  // Jika client belum siap (SSR hydration), render indikator loading halus
   if (!isClientLoaded) {
-    return <div className="min-h-screen bg-slate-950" />;
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-500 gap-2">
+        <div className="h-6 w-6 border-2 border-amber-500/40 border-t-amber-500 rounded-full animate-spin" />
+        <span className="text-xs">Memuat aplikasi...</span>
+      </div>
+    );
   }
 
   // ==========================================
