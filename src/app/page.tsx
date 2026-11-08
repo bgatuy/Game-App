@@ -32,6 +32,10 @@ export default function CekiScoreTracker() {
     oldScore: number;
     passedBy: string;
   } | null>(null);
+  const [activeWinnerPopup, setActiveWinnerPopup] = useState<{
+    name: string;
+    score: number;
+  }[] | null>(null);
   const [isClientLoaded, setIsClientLoaded] = useState<boolean>(false);
 
   // Load state dari localStorage saat pertama kali mount
@@ -173,6 +177,16 @@ export default function CekiScoreTracker() {
     setRounds([...rounds, newRoundEntry]);
     setCurrentInputs(["", "", "", ""]);
 
+    // Cek pemenang baru di ronde ini
+    const newWinners = tempTotals
+      .map((score, idx) => ({ idx, name: players[idx], score }))
+      .filter((p) => p.score >= WIN_TARGET);
+
+    // Munculkan popup pemenang jika ada yang mencapai WIN_TARGET
+    if (newWinners.length > 0) {
+      setActiveWinnerPopup(newWinners.map(w => ({ name: w.name, score: w.score })));
+    }
+
     // Munculkan popup dramatis jika ada pemain yang tersalip
     if (resetDetails.length > 0) {
       setActiveOvertakenPopup(resetDetails[0]);
@@ -192,6 +206,16 @@ export default function CekiScoreTracker() {
     setNameInputs(["", "", "", ""]);
     setIsGameStarted(false);
     setShowResetModal(false);
+    setActiveWinnerPopup(null);
+    setActiveOvertakenPopup(null);
+  };
+
+  // Mulai Lagi Pertandingan Baru (Gunakan nama pemain yang sama)
+  const handlePlayAgain = () => {
+    setRounds([]);
+    setCurrentInputs(["", "", "", ""]);
+    setActiveWinnerPopup(null);
+    setActiveOvertakenPopup(null);
   };
 
   // Simpan Nama Pemain Baru dari Modal Edit
@@ -415,21 +439,37 @@ export default function CekiScoreTracker() {
         {/* Banner Pemenang (Jika ada yang mencapai 1000 poin) */}
         {winners.length > 0 && (
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 p-0.5 shadow-xl shadow-amber-500/30 animate-pulse">
-            <div className="rounded-[14px] bg-slate-950/90 px-4 py-3.5 text-center backdrop-blur-md">
-              <span className="text-3xl block mb-1">🏆🎉</span>
+            <div className="rounded-[14px] bg-slate-950/90 px-4 py-4 text-center backdrop-blur-md space-y-2">
+              <span className="text-3xl block">🏆🎉</span>
               <h2 className="text-xl font-black text-amber-300 tracking-wider uppercase">
                 Pemenang Telah Ditemukan!
               </h2>
-              <div className="mt-1 text-sm font-semibold text-slate-200">
+              <div className="text-sm font-semibold text-slate-200">
                 {winners.map((w) => (
-                  <span key={w.idx} className="block text-amber-400 font-bold text-base">
+                  <span key={w.idx} className="block text-amber-400 font-black text-lg">
                     {w.name} ({w.score} Poin)
                   </span>
                 ))}
               </div>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-slate-400">
                 Telah berhasil mencapai target {WIN_TARGET} poin!
               </p>
+              <div className="pt-2 flex items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={handlePlayAgain}
+                  className="px-4 py-2 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs rounded-xl shadow-md uppercase tracking-wider transition active:scale-95 cursor-pointer"
+                >
+                  🎮 Mulai Lagi (Pemain Sama)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowResetModal(true)}
+                  className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl border border-slate-700 transition"
+                >
+                  🔄 Ganti Pemain
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -914,6 +954,74 @@ export default function CekiScoreTracker() {
         </div>
       )}
 
+      {/* POPUP MODAL DRAMATIS PEMENANG (MODAL FULLSCREEN SEPERTI POPUP DISALIP) */}
+      {activeWinnerPopup && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in select-none">
+          {/* Card Utama Popup Pemenang */}
+          <div className="bg-gradient-to-b from-[#1f1505] via-[#0d1424] to-[#070c18] border-2 border-amber-500/90 rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl shadow-amber-500/30 text-center space-y-4 relative overflow-hidden animate-scale-up">
+            {/* Hiasan latar belakang */}
+            <div className="absolute -top-12 -right-12 w-32 h-32 bg-amber-500/20 rounded-full blur-2xl pointer-events-none" />
+            <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-yellow-400/20 rounded-full blur-2xl pointer-events-none" />
+
+            {/* Emoticon Piala & Confetti Bergerak */}
+            <div className="relative mx-auto w-24 h-24 rounded-full bg-gradient-to-br from-amber-500/20 to-yellow-500/30 border-2 border-amber-400/70 flex items-center justify-center shadow-lg shadow-amber-500/40">
+              <span className="text-5xl animate-bounce select-none">🏆</span>
+              <span className="absolute -top-1 -right-1 text-2xl select-none animate-pulse">🎉</span>
+              <span className="absolute -bottom-1 -left-1 text-2xl select-none animate-pulse">✨</span>
+            </div>
+
+            <div className="space-y-1.5 pt-1">
+              <h3 className="text-xl font-black bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500 bg-clip-text text-transparent tracking-wide uppercase">
+                Pemenang Telah Ditemukan!
+              </h3>
+              <div className="py-2 px-3 bg-amber-950/40 border border-amber-500/40 rounded-2xl">
+                {activeWinnerPopup.map((w, idx) => (
+                  <div key={idx}>
+                    <p className="text-lg font-black text-amber-300 uppercase tracking-wide">
+                      👑 {w.name}
+                    </p>
+                    <p className="text-xs font-bold text-amber-400/90 font-mono">
+                      {w.score} Poin
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-slate-300 pt-1">
+                Telah berhasil mencapai target {WIN_TARGET} poin!
+              </p>
+            </div>
+
+            {/* Opsi Mulai Lagi */}
+            <div className="pt-2 space-y-2">
+              <button
+                type="button"
+                onClick={handlePlayAgain}
+                className="w-full py-3.5 bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 active:scale-[0.98] text-slate-950 font-black text-sm rounded-xl shadow-lg shadow-amber-500/30 uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-2"
+              >
+                <span>🎮</span> Mulai Lagi Pertandingan
+              </button>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowResetModal(true)}
+                  className="py-2.5 px-3 bg-slate-800/90 hover:bg-slate-700 active:bg-slate-600 text-slate-300 font-bold text-xs rounded-xl border border-slate-700 transition"
+                >
+                  🔄 Ganti Pemain
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveWinnerPopup(null)}
+                  className="py-2.5 px-3 bg-slate-900 hover:bg-slate-800 text-slate-400 font-bold text-xs rounded-xl border border-slate-800 transition"
+                >
+                  Lihat Skor
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* POPUP DRAMATIS: ATURAN DISALIP DENGAN EMOTICON SEDIH */}
       {activeOvertakenPopup && (
         <div
@@ -923,8 +1031,7 @@ export default function CekiScoreTracker() {
           {/* Card Utama Popup */}
           <div
             onClick={(e) => {
-              // Jika card ditekan juga tetap bisa close
-              setActiveOvertakenPopup(null);
+              e.stopPropagation();
             }}
             className="bg-gradient-to-b from-[#18080f] via-[#0d1424] to-[#070c18] border-2 border-rose-600/90 rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl shadow-rose-950/70 text-center space-y-4 relative overflow-hidden animate-scale-up"
           >
@@ -938,12 +1045,29 @@ export default function CekiScoreTracker() {
               <span className="absolute -bottom-1 -right-1 text-2xl select-none">💔</span>
             </div>
 
-            <div className="space-y-1 pt-1">
+            <div className="space-y-2 pt-1">
               <h3 className="text-xl font-black text-rose-200 tracking-wide uppercase">
-                Yaaahh Kamu Disalip! 🥺
+                Yaaahh Disalip! 🥺
               </h3>
-              <p className="text-sm font-black text-amber-300">
-                Poin Otomatis Jadi 0 Lagi Deeehhh...
+
+              {/* Detail Siapa yang Disalip & Siapa yang Menyalip */}
+              <div className="py-2.5 px-3 bg-rose-950/40 border border-rose-800/60 rounded-2xl text-left space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-400 font-medium">Yang Disalip:</span>
+                  <span className="text-rose-300 font-black">
+                    {players[activeOvertakenPopup.playerIndex]} ({activeOvertakenPopup.oldScore} Poin)
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs border-t border-rose-900/40 pt-1.5">
+                  <span className="text-slate-400 font-medium">Disalip Oleh:</span>
+                  <span className="text-amber-400 font-black">
+                    {activeOvertakenPopup.passedBy}
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-xs font-bold text-rose-300/90 pt-1">
+                Total poin {players[activeOvertakenPopup.playerIndex]} otomatis kembali ke <span className="text-rose-400 font-black underline">0</span>!
               </p>
             </div>
           </div>
